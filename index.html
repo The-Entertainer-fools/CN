@@ -1,0 +1,1270 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title id="tab-title">My Drive - Google Drive</title>
+<link id="tab-icon" rel="icon" href="https://ssl.gstatic.com/images/branding/product/1x/drive_2020q4_32dp.png">
+
+<style>
+:root {
+  --bg:#0f0f13;
+  --sidebar:#1e1e26;
+  --accent:#6c5ce7; 
+  --pink:#e84393;   
+  --yellow:#f1c40f; 
+  --green:#00ff88;
+  --cyan:#00cec9;
+  --border:rgba(255,255,255,0.08);
+  --blur: 8px;
+  --panel:#141414;
+}
+
+*{box-sizing:border-box;margin:0;padding:0;}
+
+body {
+  background-color: #0f0f13;
+  background-size: cover;
+  background-position: center;
+  background-repeat: no-repeat;
+  color:white;
+  font-family:'Segoe UI',sans-serif;
+  height:100vh;
+  width: 100vw;
+  display:flex;
+  overflow:hidden;
+}
+
+#particles-js {
+ position: fixed;
+ width: 100%;
+ height: 100%;
+ top: 0;
+ left: 0;
+ z-index: 1;
+ pointer-events: all;
+}
+
+#sys-notifier {
+  position: fixed;
+  top: 15px;
+  right: 15px;
+  background: rgba(30, 30, 38, 0.95);
+  border: 1px solid var(--pink);
+  box-shadow: 0 4px 15px rgba(0,0,0,0.5);
+  padding: 12px 18px;
+  border-radius: 8px;
+  z-index: 1000;
+  display: none;
+  font-size: 13px;
+  animation: slideIn 0.3s ease;
+  max-width: 300px;
+}
+@keyframes slideIn { from { transform: translateX(120%); } to { transform: translateX(0); } }
+
+/* ===== LOGIN FIREWALL GATEWAY ===== */
+#login{position:fixed;inset:0;background:#050508;display:flex;align-items:center;justify-content:center;z-index:9999;}
+.login-box{background:var(--sidebar);border:1px solid var(--border);padding:35px;border-radius:16px;width:400px;box-shadow:0 0 35px rgba(108,92,231,0.25);text-align:center;}
+.login-box h2{margin-bottom:18px;font-size:26px;color:var(--accent);letter-spacing:0.5px;}
+.login-box input, .login-box select{width:100%;padding:11px;margin-bottom:12px;background:#000;border:1px solid var(--border);border-radius:8px;color:white;outline:none;font-size:13px;}
+.login-box input:focus, .login-box select:focus{border-color:var(--accent);box-shadow:0 0 10px var(--accent);}
+.login-box button{width:100%;padding:13px;background:var(--accent);color:white;border:none;font-weight:bold;border-radius:10px;cursor:pointer;transition:0.3s;text-transform:uppercase;font-size:12px;letter-spacing:1px;margin-top:5px;}
+.login-box button:hover{background:var(--pink);box-shadow:0 0 15px rgba(232,67,147,0.4);}
+.login-box p{font-size:13px;margin-top:14px;cursor:pointer;opacity:.8;color:var(--yellow);text-decoration:underline;}
+
+#registration-name-fields { display: none; flex-direction: column; }
+.secret-input { border: 1px dashed var(--pink) !important; text-align: center; color: var(--pink) !important; font-family: monospace; font-weight: bold; }
+#password-changer-panel { display: none; margin-top: 15px; padding-top: 15px; border-top: 1px dashed var(--border); }
+#password-changer-panel h3 { font-size: 13px; color: var(--pink); margin-bottom: 10px; text-transform: uppercase; letter-spacing: 1px; }
+
+/* ===== NAVIGATION TRACK ===== */
+.sys-nav{width:65px;background:#050507;border-right:1px solid var(--border);display:flex;flex-direction:column;align-items:center;padding-top:20px;z-index: 101;flex-shrink: 0;}
+.nav-btn{width:45px;height:45px;border-radius:12px;background:rgba(255,255,255,0.02);border:1px solid var(--border);display:flex;align-items:center;justify-content:center;cursor:pointer;margin-bottom:14px;font-size:20px;transition:0.2s;user-select:none;color: rgba(255,255,255,0.4);}
+.nav-btn:hover { border-color: rgba(255,255,255,0.3); background: rgba(255,255,255,0.05); color: #fff; }
+
+#tab-btn-code.active { background: var(--accent); color: white; border-color: var(--accent); box-shadow: 0 0 15px rgba(108,92,231,0.4); }
+#tab-btn-chat.active { background: var(--pink); color: white; border-color: var(--pink); box-shadow: 0 0 15px rgba(232,67,147,0.4); }
+#tab-btn-sandbox.active { background: var(--yellow); color: #000; border-color: var(--yellow); box-shadow: 0 0 15px rgba(241,196,15,0.4); }
+#tab-btn-notes.active { background: var(--green); color: #000; border-color: var(--green); box-shadow: 0 0 15px rgba(0,255,136,0.4); }
+#tab-btn-admin.active { background: #fff; color: #000; border-color: #fff; box-shadow: 0 0 15px rgba(255,255,255,0.4); }
+
+/* ===== SYSTEM SIDEBAR ===== */
+.sidebar {
+  width:320px;
+  height: 100vh;
+  background:var(--sidebar);
+  border-right:1px solid var(--border);
+  display:flex; flex-direction:column;
+  z-index: 100;
+  position: relative;
+  box-shadow: 10px 0 30px rgba(0,0,0,0.5);
+  transition: transform 0.25s ease, width 0.25s ease;
+  flex-shrink: 0;
+}
+.sidebar.hidden-sidebar { transform: translateX(-320px); width: 0; overflow: hidden; border-right: none; }
+.sidebar-scroll-content { flex: 1; overflow-y: auto; padding: 25px; display: flex; flex-direction: column; gap: 24px; }
+.sidebar-section { padding-bottom: 18px; border-bottom: 1px solid rgba(255,255,255,0.04); }
+.sidebar-section:last-child { border-bottom: none; }
+.header-rainbow { height:4px; display:flex; flex-shrink: 0; }
+.h-strip { flex:1; }
+#countdown { font-size:2rem; font-weight:300; font-family:monospace; color: var(--yellow); letter-spacing: 1px; text-align: center;}
+
+#logout-zone { display: none; margin-top: 10px; flex-direction: column; gap: 6px; }
+.logout-btn-row { display: flex; gap: 6px; }
+
+.label { font-size:10px; font-weight:800; color:#6e6e7e; text-transform:uppercase; margin-bottom: 10px; letter-spacing: 1.5px;}
+.input-group { display:flex; background:#000; border:1px solid var(--border); border-radius:8px; overflow:hidden; }
+.input-group input { flex:1; background:transparent; border:none; color:#fff; padding:11px; font-size:12px; outline:none; }
+.b-item { background:rgba(255,255,255,0.02); padding:11px 14px; border-radius:6px; font-size:11px; cursor:pointer; display:flex; justify-content:space-between; transition:0.2s; border: 1px solid var(--border); }
+.b-item:hover { background:rgba(255,255,255,0.06); border-color: rgba(255,255,255,0.2); }
+.id-grid { display:grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-bottom: 10px;}
+.id-btn { background:rgba(255,255,255,0.03); border:1px solid var(--border); color:#aaa; font-size:11px; padding:10px; border-radius:6px; cursor:pointer; font-weight:600; transition:0.2s; text-align: center; }
+.id-btn:hover, .id-btn.active { background:rgba(255,255,255,0.1); color:white; border-color:rgba(255,255,255,0.3); }
+
+.profile-input-stack { display: flex; flex-direction: column; gap: 6px; }
+.profile-input-stack input, .profile-input-stack select, .profile-input-stack textarea { background:#000; border:1px solid var(--border); color:#fff; padding:8px; border-radius:6px; font-size:12px; outline:none; font-family:inherit;}
+.profile-input-stack textarea { resize: none; height: 50px; }
+
+/* ===== MAIN PANELS ===== */
+.main { flex:1; display:flex; flex-direction:column; position: relative; z-index: 50; background: transparent; overflow: hidden; }
+.view-panel { display: none !important; flex: 1; width: 100%; height: 100%; position: relative; overflow: hidden; }
+.view-panel.active-panel { display: flex !important; }
+
+/* Code Panel */
+#panel-code { flex-direction: column; }
+.toolbar { padding:14px 25px; background:rgba(0,0,0,0.5); border-bottom: 1px solid var(--border); display:flex; justify-content:space-between; align-items:center; backdrop-filter: blur(10px); }
+.editor-container { flex:1; display: flex; position:relative; overflow: hidden; }
+#line-numbers { width: 45px; padding: 26px 8px; text-align: right; background: rgba(0, 0, 0, 0.3); color: #444; font-family: 'Consolas', monospace; font-size: 14px; line-height: 21px; user-select: none; overflow: hidden; }
+#editor { flex: 1; background:rgba(15, 15, 19, 0.2); backdrop-filter: blur(var(--blur)); color:#fff; border:none; padding:26px; font-family:'Consolas',monospace; font-size:14px; line-height: 21px; outline:none; resize: none; white-space: pre; overflow-x: auto; }
+#editor:disabled { background: rgba(232, 67, 147, 0.05); color: #777; cursor: not-allowed; }
+
+.btn { padding:9px 16px; border-radius:6px; border:none; font-weight:bold; font-size:10px; cursor:pointer; text-transform:uppercase; transition:0.2s; margin-left: 5px; }
+.btn-render { background: rgba(0, 206, 203, 0.1); border: 1px solid var(--cyan); color: var(--cyan); }
+.btn-render:hover { background: var(--cyan); color: #000; box-shadow: 0 0 10px rgba(0, 206, 203, 0.4); }
+.btn-load { background: rgba(241, 196, 15, 0.1); border: 1px solid var(--yellow); color: var(--yellow); }
+.btn-load:hover { background: var(--yellow); color: #000; box-shadow: 0 0 10px rgba(241, 196, 15, 0.4); }
+.btn-save { background: rgba(232, 67, 147, 0.1); border: 1px solid var(--pink); color: var(--pink); }
+.btn-save:hover { background: var(--pink); color: #fff; box-shadow: 0 0 10px rgba(232, 67, 147, 0.4); }
+.btn-run { background: rgba(0, 255, 136, 0.15); border: 1px solid var(--green); color: var(--green); }
+.btn-run:hover { background: var(--green); color: #000; box-shadow: 0 0 15px rgba(0, 255, 136, 0.5); }
+
+.loading-indicator { display: none; align-items: center; justify-content: center; position: absolute; inset: 0; background: rgba(15,15,19,0.85); z-index: 100; color: var(--yellow); font-family: monospace; font-size: 14px; font-weight: bold; }
+.btn-history { background: rgba(255, 255, 255, 0.03); border: 1px solid rgba(255, 255, 255, 0.1); color: #888; }
+.btn-history.active-history { color: #fff; background: rgba(255, 255, 255, 0.08); border-color: rgba(255, 255, 255, 0.25); }
+
+.btn-go { background: rgba(0, 255, 136, 0.15); border: 1px solid var(--green); color: var(--green); padding: 0 14px; cursor: pointer; font-weight: bold; transition: 0.2s; text-transform: uppercase; font-size: 10px; }
+.btn-go:hover { background: var(--green); color: #000; box-shadow: 0 0 15px rgba(0, 255, 136, 0.5); }
+input[type="range"] { width: 100%; accent-color: var(--accent); cursor: pointer; margin-top: 8px; }
+
+/* Chat UI */
+.chat-wrap { width: 100%; height: 100%; display: flex; overflow: hidden; }
+.sub-sidebar{width:260px;background:rgba(20,20,26,0.6);backdrop-filter:blur(var(--blur));border-right:1px solid var(--border);padding:20px;display:flex;flex-direction:column; gap: 20px; overflow-y:auto;}
+.section-title{font-size:10px;font-weight:800;color:var(--yellow);letter-spacing:1.5px;text-transform:uppercase;}
+.channel-container, .friends-container { display: flex; flex-direction: column; gap: 6px; margin-top: 8px;}
+.channel, .friend, .req-card{padding:10px 12px;border-radius:6px;cursor:pointer;transition:0.2s;display:flex;justify-content:space-between;align-items:center;font-size:12px;background:rgba(255,255,255,0.01);border:1px solid transparent;}
+.channel:hover, .friend:hover { background: rgba(255,255,255,0.04); }
+.channel.active, .friend.active{background:rgba(255,255,255,0.06);color:#fff;border-color:rgba(255,255,255,0.2);font-weight:bold;}
+.status-dot { width:8px; height:8px; border-radius:50%; margin-left:6px; display:inline-block; }
+
+.chat-area{flex:1;display:flex;flex-direction:column;background:rgba(15,15,19,0.4);backdrop-filter:blur(var(--blur));}
+#logs{flex:1;padding:25px;overflow-y:auto;}
+.msg{background:rgba(0,0,0,0.3);border-left:3px solid rgba(255,255,255,0.3);padding:14px;margin-bottom:14px;border-radius:6px;font-size:13px;line-height:20px; position: relative;}
+.msg span.msg-time { float: right; color: #555; font-size: 11px; font-family: monospace; }
+.clickable-user { cursor: pointer; text-decoration: underline; }
+
+.chat-area .input-bar{display:flex;padding:18px;border-top:1px solid var(--border);background:rgba(0,0,0,0.4);}
+.chat-area .input-bar input{flex:1;background:#000;border:1px solid var(--border);color:white;padding:12px;border-radius:8px;outline:none;font-size:13px;}
+.chat-area .input-bar input:disabled { background: rgba(232, 67, 147, 0.05); color:#555; cursor:not-allowed; }
+.chat-area .input-bar button{width:48px;margin-left:10px;background:rgba(255,255,255,0.1);border:1px solid rgba(255,255,255,0.2);color:white;cursor:pointer;border-radius:8px;font-weight:bold;}
+
+.search-results-tray { background:#050507; border:1px solid var(--border); border-radius:6px; max-height:120px; overflow-y:auto; display:none; flex-direction:column; }
+.search-row { padding:8px 12px; font-size:12px; cursor:pointer; display:flex; justify-content:space-between; align-items:center; }
+.search-row:hover { background: rgba(255,255,255,0.05); }
+
+/* Sandbox Mode Design Layer workspace styles */
+#panel-sandbox { flex-direction: column; background: rgba(15, 15, 19, 0.4); backdrop-filter: blur(var(--blur)); }
+.sandbox-subject-bar { display: flex; gap: 8px; padding: 15px 25px; background: rgba(0,0,0,0.3); border-bottom: 1px solid var(--border); flex-wrap: wrap; }
+.sandbox-subject-btn { padding: 6px 14px; border: 1px solid var(--border); background: rgba(255,255,255,0.02); color: #aaa; border-radius: 6px; font-size: 11px; font-weight: bold; cursor: pointer; }
+.sandbox-subject-btn.active { background: var(--yellow); color: #000; border-color: var(--yellow); }
+
+.sandbox-workspace { flex: 1; display: flex; align-items: center; justify-content: center; padding: 20px; position: relative; background: #08080a; flex-direction: column; overflow-y: auto; }
+.sandbox-canvas-wrapper { display: none; flex-direction: column; align-items: center; gap: 12px; width: 100%; }
+.sandbox-canvas-wrapper.active-mode { display: flex; }
+canvas { background: #111; border: 2px solid var(--border); border-radius: 8px; box-shadow: 0 10px 30px rgba(0,0,0,0.7); max-width: 100%; }
+.canvas-controls { display: flex; gap: 10px; align-items: center; flex-wrap: wrap; justify-content: center; width: 100%; margin-top: 5px; }
+
+.custom-game-loader-box { width: 100%; max-width: 700px; display: flex; flex-direction: column; gap: 8px; background: rgba(0,0,0,0.4); padding: 15px; border-radius: 8px; border: 1px dashed var(--border); margin-top: 10px; }
+.custom-game-loader-box textarea { width: 100%; height: 80px; background: #000; border: 1px solid var(--border); border-radius: 6px; padding: 10px; color: var(--green); font-family: monospace; font-size: 11px; resize: none; outline: none; }
+
+#profile-viewer-modal { position: fixed; inset:0; background:rgba(0,0,0,0.7); display:none; align-items:center; justify-content:center; z-index:2000; backdrop-filter:blur(4px); }
+.profile-card-popup { background: var(--sidebar); border:1px solid var(--border); border-radius:12px; width:340px; padding:25px; box-shadow:0 10px 30px rgba(0,0,0,0.5); position:relative; }
+.profile-modal-actions { margin-top: 15px; display: flex; flex-direction: column; gap: 8px; }
+
+/* Notes Layout */
+#panel-notes { padding: 25px; flex-direction: column; background: rgba(15, 15, 19, 0.4); backdrop-filter: blur(var(--blur)); gap: 15px;}
+.notes-container { display: flex; flex: 1; gap: 20px; overflow: hidden; }
+.notes-sidebar { width: 220px; display: flex; flex-direction: column; gap: 8px; overflow-y: auto;}
+.note-item { padding: 12px; background: rgba(255,255,255,0.02); border: 1px solid var(--border); border-radius: 6px; cursor: pointer; font-size: 12px; display: flex; justify-content: space-between; }
+.note-item:hover, .note-item.active { background: rgba(255,255,255,0.06); border-color: var(--green); }
+.notes-content { flex: 1; display: flex; flex-direction: column; gap: 12px; }
+.notes-content textarea { flex: 1; background: #000; border: 1px solid var(--border); border-radius: 8px; padding: 20px; color: #fff; font-family: monospace; resize: none; outline: none; font-size: 14px;}
+
+/* ===== RE-ENGINEERED COMPREHENSIVE MANAGEMENT CONSOLE ===== */
+#panel-admin { padding: 25px; flex-direction: column; overflow-y: auto; background: var(--bg); display: none; }
+.admin-card { background: var(--sidebar); border: 1px solid var(--border); border-radius: 12px; padding: 30px; width: 100%; display: flex; flex-direction: column; gap: 20px; box-shadow: 0 15px 40px rgba(0,0,0,0.4); }
+.admin-card h3 { font-size: 22px; color: var(--accent); border-bottom: 2px solid var(--border); padding-bottom: 12px; letter-spacing: 0.5px; }
+#admin-user-list { display: flex; flex-direction: column; gap: 16px; width: 100%; }
+
+.user-row { 
+  display: flex; 
+  flex-direction: column; 
+  background: rgba(0,0,0,0.3); 
+  border: 1px solid var(--border); 
+  border-radius: 10px; 
+  padding: 20px; 
+  gap: 15px;
+  transition: border-color 0.2s;
+}
+.user-row:hover { border-color: rgba(108, 92, 231, 0.3); }
+.user-row-info { width: 100%; border-bottom: 1px solid rgba(255,255,255,0.04); padding-bottom: 12px; }
+.user-row-actions { 
+  display: grid; 
+  grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); 
+  gap: 10px; 
+  width: 100%; 
+}
+
+.adm-btn { 
+  padding: 10px 14px; 
+  border: 1px solid rgba(255,255,255,0.08); 
+  border-radius: 6px; 
+  font-size: 11px; 
+  font-weight: bold; 
+  cursor: pointer; 
+  text-transform: uppercase; 
+  transition: all 0.2s ease; 
+  color: #fff;
+  text-align: center;
+  background: rgba(255,255,255,0.03);
+}
+.adm-btn:hover { background: rgba(255,255,255,0.08); border-color: rgba(255,255,255,0.2); }
+.role-badge { padding: 4px 10px; border-radius: 4px; font-size: 10px; font-weight: bold; text-transform: uppercase; display: inline-block; margin-left: 8px; }
+
+.interactive-pass-key {
+  color: var(--yellow); font-family: monospace; background: rgba(0,0,0,0.5); padding: 4px 10px; border-radius: 4px; margin-left: 10px; cursor: pointer; user-select: none; border: 1px dashed rgba(241, 196, 15, 0.3); transition: all 0.2s ease; display: inline-block; font-size: 12px;
+}
+.interactive-pass-key:hover { background: rgba(241, 196, 15, 0.1); border-color: var(--yellow); }
+.friend-remove-btn { color: var(--pink); font-size: 14px; font-weight: bold; cursor: pointer; padding: 2px 6px; border-radius: 4px; }
+</style>
+<script src="https://cdn.jsdelivr.net/npm/particles.js@2.0.0/particles.min.js"></script>
+</head>
+
+<body>
+
+<div id="sys-notifier"></div>
+
+<div id="profile-viewer-modal" onclick="closeProfileViewer()">
+  <div class="profile-card-popup" onclick="event.stopPropagation()">
+    <span style="position:absolute; top:15px; right:15px; cursor:pointer; font-weight:bold; color:#777;" onclick="closeProfileViewer()">✕</span>
+    <h3 id="pv-title" style="color:var(--accent); margin-bottom:4px;">@handle</h3>
+    <div id="pv-nickname" style="font-size:13px; font-weight:bold; color:var(--yellow); margin-bottom:12px;">Nickname</div>
+    <div style="border-top:1px solid var(--border); padding-top:10px; font-size:12px; display:flex; flex-direction:column; gap:8px;">
+       <div><b>Status:</b> <span id="pv-status">Online</span></div>
+       <div><b>Gender:</b> <span id="pv-gender">Not Specified</span></div>
+       <div><b>About Me:</b><p id="pv-bio" style="color:#aaa; background:#000; padding:8px; border-radius:6px; margin-top:4px; min-height:40px; white-space:pre-wrap;"></p></div>
+    </div>
+    <div class="profile-modal-actions">
+       <button id="modal-friend-btn" class="btn btn-run" style="margin-left:0; width:100%; padding:10px;" onclick="handleModalFriendAction()">Add Friend</button>
+       <button id="modal-block-btn" class="btn btn-save" style="margin-left:0; width:100%; padding:10px; background: rgba(232, 67, 147, 0.15);" onclick="toggleBlockUserAction()">Block User</button>
+    </div>
+  </div>
+</div>
+
+<div id="login">
+  <div class="login-box">
+    <h2 id="loginTitle">System Login</h2>
+    <input id="secret-gate" type="password" class="secret-input" placeholder="[ Override Node ]" oninput="checkSecretCode(this.value)">
+    
+    <div id="auth-fields-wrapper">
+      <div id="registration-name-fields">
+         <input id="real-first-name" placeholder="First Name (Optional)">
+         <input id="real-last-name" placeholder="Last Name (Optional)">
+      </div>
+      <input id="handle" placeholder="@handle">
+      <input id="username" placeholder="NickName">
+      <input id="pass" type="password" placeholder="Password">
+      <input id="pass2" type="password" placeholder="Verify Password">
+      <input id="pfp" placeholder="Profile Picture URL (Optional)">
+      <select id="status">
+        <option value="Online">Online</option>
+        <option value="AFK">AFK</option>
+        <option value="DND">DND</option>
+        <option value="Offline">Offline</option>
+      </select>
+      <button onclick="auth()">Login</button>
+      <p id="toggle-text" onclick="toggle()">Register Account</p>
+    </div>
+
+    <div id="password-changer-panel">
+      <h3>Modify Security Key Mapping</h3>
+      <input id="change-handle" placeholder="@handle target">
+      <input id="change-old-pass" type="password" placeholder="Current Password">
+      <input id="change-new-pass" type="password" placeholder="New Password">
+      <button onclick="executePasswordReset()" style="background:var(--pink); width:100%;">Confirm New Password</button>
+    </div>
+  </div>
+</div>
+
+<div id="particles-js"></div>
+
+<nav class="sys-nav">
+  <div class="nav-btn active" id="tab-btn-code" title="Code Panel" onclick="switchNavPanel('code')">💻</div>
+  <div class="nav-btn" id="tab-btn-chat" title="Chat Interface" onclick="switchNavPanel('chat')">💬</div>
+  <div class="nav-btn" id="tab-btn-sandbox" title="Sandbox Games Network" onclick="switchNavPanel('sandbox')">🎮</div>
+  <div class="nav-btn" id="tab-btn-notes" title="Notes Memory Storage" onclick="switchNavPanel('notes')">📝</div>
+  <div class="nav-btn" id="tab-btn-admin" title="Management Console" onclick="switchNavPanel('admin')" style="display: none;">🛡️</div>
+</nav>
+
+<div class="sidebar" id="main-system-sidebar">
+  <div class="header-rainbow">
+     <div class="h-strip" style="background:var(--yellow)"></div>
+     <div class="h-strip" style="background:var(--pink)"></div>
+     <div class="h-strip" style="background:var(--accent)"></div>
+  </div>
+
+  <div class="sidebar-scroll-content">
+     <div class="sidebar-section clock-section">
+         <div id="countdown">00:00:00</div>
+         <button id="logout-trigger-btn" class="id-btn" style="width:100%; margin-top:10px; border-color:var(--pink); color:var(--pink);" onclick="startLogoutSequence()">🚪 Disconnect Session</button>
+         <div id="logout-zone">
+           <div class="label" style="color:var(--pink); text-align:center; margin-bottom:5px;">Purging Identity Logs...</div>
+           <div class="logout-btn-row">
+             <button class="id-btn" style="flex:1; border-color:#e74c3c; color:#e74c3c;" onclick="cancelLogoutSequence()">Cancel</button>
+             <button class="id-btn" style="flex:1; border-color:#2ecc71; color:#2ecc71;" onclick="confirmImmediateLogout()">Confirm</button>
+           </div>
+         </div>
+     </div>
+
+     <div class="sidebar-section">
+         <div class="label">System Shortcuts</div>
+         <div style="display: flex; flex-direction: column; gap: 8px; margin-bottom: 12px;">
+             <div class="b-item" onclick="openCloaked('https://testingcf.jsdelivr.net/gh/coinbaselarper/svg/logo.svg', true)">
+                 <span>LUCIDE</span>
+                 <span style="color:var(--yellow)">★</span>
+             </div>
+         </div>
+         <div class="input-group">
+             <input id="urlIn" placeholder="Inject URL Target...">
+             <button class="btn-go" onclick="launchUrl()">GO</button>
+         </div>
+     </div>
+
+     <div class="sidebar-section">
+         <div class="label">Tab Identity Mask</div>
+         <div class="id-grid">
+             <button class="id-btn" id="btn-drive" onclick="setIdentity('drive')">Drive</button>
+             <button class="id-btn" id="btn-gmail" onclick="setIdentity('gmail')">Gmail</button>
+             <button class="id-btn" id="btn-tab" onclick="setIdentity('tab')">New Tab</button>
+             <button class="id-btn" id="btn-wiki" onclick="setIdentity('wiki')">Wiki</button>
+         </div>
+         <div style="display:flex; flex-direction:column; gap:8px;">
+             <input id="custom-t" placeholder="Custom Title..." style="width:100%; background:#000; border:1px solid var(--border); color:#fff; padding:9px; border-radius:6px; font-size:12px;">
+             <input id="custom-i" placeholder="Custom Icon URL..." style="width:100%; background:#000; border:1px solid var(--border); color:#fff; padding:9px; border-radius:6px; font-size:12px;">
+             <button class="id-btn" style="width:100%;" onclick="applyCustomIdentity()">Apply Identity</button>
+         </div>
+     </div>
+
+     <div class="sidebar-section">
+         <div class="label">Personal Info</div>
+         <div class="profile-input-stack">
+             <select id="my-profile-status" onchange="updateLiveStatus(this.value)">
+                 <option value="Online">Online</option>
+                 <option value="AFK">AFK</option>
+                 <option value="DND">DND</option>
+                 <option value="Offline">Offline</option>
+             </select>
+             <input id="my-profile-nickname" placeholder="Handle Alias Name..." oninput="cacheProfileConfig()">
+             <textarea id="my-profile-bio" placeholder="Bio description..." oninput="cacheProfileConfig()"></textarea>
+         </div>
+     </div>
+  </div>
+</div>
+
+<div class="main">
+  <div id="panel-code" class="view-panel active-panel">
+    <div class="loading-indicator" id="file-load-overlay">⚙️ PARSING COMPLEX CODE STORAGE NODE... <span id="load-progress">0%</span></div>
+    <div class="toolbar">
+       <div style="font-size:11px;font-weight:bold;color:var(--yellow);">CORE_FILE: <span id="fname">untitled.html</span></div>
+       <div style="display:flex; align-items: center;">
+           <button class="btn btn-history" id="btn-undo" onclick="triggerEditorUndo()">⤺ Undo</button>
+           <button class="btn btn-history" id="btn-redo" onclick="triggerEditorRedo()">⤻ Redo</button>
+           <span style="width: 1px; height: 16px; background: var(--border); margin: 0 10px;"></span>
+           <button class="btn btn-render" onclick="document.getElementById('render-input').click()">Render HTML</button>
+           <button class="btn btn-load" onclick="document.getElementById('f-input').click()">Load Code</button>
+           <button class="btn btn-save" onclick="downloadFile()">Save Code</button>
+           <button class="btn btn-run" id="btn-run-cloaked" onclick="executeEditor()">▶ Run Cloaked</button>
+       </div>
+    </div>
+    <div class="editor-container">
+       <div id="line-numbers">1</div>
+       <textarea id="editor" spellcheck="false" placeholder="Insert Code Here..." oninput="handleEditorInput()" onkeydown="handleEditorKeydowns(event)" onscroll="syncScroll()"></textarea>
+    </div>
+  </div>
+
+  <div id="panel-chat" class="view-panel chat-wrap">
+    <div class="sub-sidebar">
+      <div>
+        <div class="section-title">MAIN CHANNELS</div>
+        <div class="channel-container" id="channel-list-container">
+          <div class="channel active" id="chan-Global" onclick="selectChannel('Global')">#MAIN</div>
+        </div>
+      </div>
+      <div>
+        <div class="section-title">FRIEND REQUESTS</div>
+        <div id="requests-list" class="friends-container"></div>
+      </div>
+      <div>
+        <div class="section-title">FRIENDS</div>
+        <div id="friends-list" class="friends-container"></div>
+        <input id="friend-search" placeholder="Insert User Handle..." style="margin-top:14px;padding:8px;border-radius:6px;border:1px solid var(--border);background:#000;color:white;outline:none;font-size:12px; width:100%;" oninput="executePredictiveSearch(this.value)">
+        <div class="search-results-tray" id="predictive-search-tray"></div>
+        <button onclick="sendFriendRequestDirect()" style="margin-top:6px;padding:8px;border:none;border-radius:6px;background:rgba(255,255,255,0.05);border:1px solid rgba(255,255,255,0.1);color:white;cursor:pointer;width:100%;font-weight:bold;font-size:11px;">SEND FRIEND REQUEST</button>
+      </div>
+    </div>
+    <div class="chat-area">
+      <div id="logs"></div>
+      <div class="input-bar">
+        <input id="msg" placeholder="Send A Message...">
+        <button id="msg-send-btn" onclick="send()">➤</button>
+      </div>
+    </div>
+  </div>
+
+  <div id="panel-sandbox" class="view-panel">
+     <div class="sandbox-subject-bar">
+         <button class="sandbox-subject-btn active" id="sb-btn-draw" onclick="switchSandboxMode('draw')">🎨 Canvas Studio</button>
+         <button class="sandbox-subject-btn" id="sb-btn-snake" onclick="switchSandboxMode('snake')">🐍 Cyber Grid Snake</button>
+         <button class="sandbox-subject-btn" id="sb-btn-dino" onclick="switchSandboxMode('dino')">🦖 Chrome Dino Replica</button>
+         <button class="sandbox-subject-btn" id="sb-btn-gravity" onclick="switchSandboxMode('gravity')">🌌 Gravity Game</button>
+         <button class="sandbox-subject-btn" id="sb-btn-custom" onclick="switchSandboxMode('custom')">📥 Custom Game Engine</button>
+     </div>
+     <div class="sandbox-workspace">
+         <div id="sandbox-draw-root" class="sandbox-canvas-wrapper active-mode">
+             <canvas id="drawingCanvas" width="700" height="420"></canvas>
+             <div class="canvas-controls">
+                 <input type="color" id="brushColor" value="#00ff88" style="background:transparent; border:none; width:40px; height:30px; cursor:pointer;">
+                 <input type="range" id="brushSize" min="1" max="25" value="5" style="width:120px; margin-top:0;">
+                 <button class="btn btn-save" style="background:rgba(255,255,255,0.05); color:#fff; border:1px solid var(--border);" onclick="clearDrawingCanvas()">Clear Board</button>
+             </div>
+         </div>
+         
+         <div id="sandbox-snake-root" class="sandbox-canvas-wrapper">
+             <canvas id="snakeCanvas" width="700" height="420"></canvas>
+             <div class="canvas-controls">
+                 <span id="snake-score-ui" style="font-size:12px; font-family:monospace; color:var(--yellow); font-weight:bold;">SCORE: 0</span>
+                 <span style="font-size:11px; color:#aaa; font-family:monospace; margin-left:15px;">[Arrow Keys] to Steer Module direction</span>
+             </div>
+         </div>
+
+         <div id="sandbox-dino-root" class="sandbox-canvas-wrapper">
+             <canvas id="dinoCanvas" width="700" height="420"></canvas>
+             <div class="canvas-controls">
+                 <span id="dino-score-ui" style="font-size:12px; font-family:monospace; color:var(--green); font-weight:bold;">DISTANCE: 0 | BEST: 0</span>
+                 <span style="font-size:11px; color:#aaa; font-family:monospace; margin-left:15px;">[SPACEBAR / UP ARROW] to Jump over Obmstacles</span>
+                 <button class="btn btn-run" onclick="resetDinoGameSystem()">Re-initialize Dino Node</button>
+             </div>
+         </div>
+
+         <div id="sandbox-gravity-root" class="sandbox-canvas-wrapper">
+             <canvas id="gravityCanvas" width="700" height="420"></canvas>
+             <div class="canvas-controls">
+                 <span style="font-size:11px; color:#aaa; font-family:monospace;">Click/Drag on viewport area to deploy kinetic anti-gravity pressure waves!</span>
+                 <button class="btn btn-load" onclick="resetGravitySimulation()">Reset Vector Field</button>
+             </div>
+         </div>
+
+         <div id="sandbox-custom-root" class="sandbox-canvas-wrapper">
+             <canvas id="customCanvas" width="700" height="420"></canvas>
+             <div class="custom-game-loader-box">
+                 <div class="label" style="color:var(--green); margin-bottom:2px;">Paste Custom Canvas Script Workspace Block</div>
+                 <textarea id="custom-game-code" spellcheck="false" placeholder="// Inject code strings mapped directly to frame loops. Example:&#10;ctx.fillStyle = 'cyan';&#10;ctx.fillRect(Math.random()*600, Math.random()*350, 20, 20);"></textarea>
+                 <button class="btn btn-run" style="margin-left:0; width:100%;" onclick="loadAndExecuteCustomGameLoop()">Compile & Run Script Node</button>
+             </div>
+         </div>
+     </div>
+  </div>
+
+  <div id="panel-notes" class="view-panel">
+     <div class="toolbar" style="width:100%; padding:0 0 10px 0; background:transparent;">
+         <div style="font-size:12px; font-weight:bold; color:var(--green)">CoreNet Secure Notes</div>
+         <button class="btn btn-run" style="background:var(--green); color:#000;" onclick="createNewNoteNode()">+ Open New Page</button>
+     </div>
+     <div class="notes-container">
+         <div class="notes-sidebar" id="notes-nodes-list"></div>
+         <div class="notes-content">
+             <input id="note-title-input" placeholder="Title Log Entry..." style="background:#000; border:1px solid var(--border); padding:10px; border-radius:6px; color:#fff; outline:none;" oninput="saveCurrentNoteData()">
+             <textarea id="note-body-textarea" placeholder="Empty Log..." oninput="saveCurrentNoteData()"></textarea>
+         </div>
+     </div>
+  </div>
+
+  <div id="panel-admin" class="view-panel">
+    <div class="admin-card">
+      <h3>Node Management & Moderation Terminal</h3>
+      <div id="admin-user-list"></div>
+    </div>
+  </div>
+
+  <input type="file" id="f-input" style="display:none" onchange="loadCode(this)">
+  <input type="file" id="render-input" style="display:none" accept=".html" onchange="handleFileRender(this)">
+</div>
+
+<script>
+function getStorageItem(key, defaultVal) { return JSON.parse(localStorage.getItem(key) || JSON.stringify(defaultVal)); }
+function setStorageItem(key, data) { localStorage.setItem(key, JSON.stringify(data)); }
+
+let current = null;
+let register = false;
+let currentChannel = 'Global';
+let logoutTimer = null;
+let logoutSecondsLeft = 30;
+let activeNoteId = null;
+let activeSandboxMode = 'draw';
+let targetedModalHandle = null;
+
+let editorUndoStack = [""];
+let editorRedoStack = [];
+let maxHistoryLimit = 200;
+let isApplyingHistoryState = false;
+
+let revealedAdminPasswords = {};
+
+// Canvas context pointers
+let isPainting = false;
+let dCtx, dCanvas;
+let sCtx, sCanvas;
+let dinoCtx, dinoCanvas;
+let gravCtx, gravCanvas;
+let custCtx, custCanvas;
+
+let gameLoopId = null;
+let gameKeys = {};
+
+// Cyber Snake Matrix State Variables
+let cyberSnake = [];
+let gridDataFood = { x: 0, y: 0 };
+let snakeDirection = "RIGHT";
+let nextSnakeDirection = "RIGHT";
+let snakeSpeedTicks = 0;
+
+// Chrome Dino Replica State Variables
+let dinoAgent = { x: 50, y: 300, w: 30, h: 45, vy: 0, gravity: 0.8, jumpForce: -13, isGrounded: true };
+let globalObstacles = [];
+let dinoScore = 0;
+let dinoHighScore = 0;
+let dinoGameActive = true;
+let speedFactorMultiplier = 4.5;
+
+// Gravity Simulation Arrays
+let planetaryObjects = [];
+let kineticShockwaves = [];
+
+// Script Injection State Reference
+let customUserExecutionFunction = null;
+
+const roleColors = { owner: 'var(--yellow)', admin: 'var(--accent)', mod: 'var(--pink)', user: '#6e6e7e' };
+const statusColors = { Online: 'var(--accent)', AFK: 'var(--yellow)', DND: 'var(--pink)', Offline: 'gray' };
+
+function checkSecretCode(val) {
+  const changePanel = document.getElementById("password-changer-panel");
+  const coreAuthFields = document.getElementById("auth-fields-wrapper");
+  if(val === "721") { 
+    changePanel.style.display = "block"; 
+    coreAuthFields.style.display = "none"; 
+    setTimeout(() => { document.getElementById("secret-gate").value = ""; }, 100);
+  } 
+  else { changePanel.style.display = "none"; coreAuthFields.style.display = "block"; }
+}
+
+function executePasswordReset() {
+  let users = getStorageItem("users", []);
+  const targetHandle = document.getElementById("change-handle").value.trim();
+  const oldPass = document.getElementById("change-old-pass").value;
+  const newPass = document.getElementById("change-new-pass").value;
+  if(!targetHandle || !oldPass || !newPass) return alert("Fill all tracking fields.");
+  const account = users.find(x => x.h === targetHandle);
+  if(!account) return alert("Account identity record not found.");
+  if(account.p !== oldPass) return alert("Validation password mismatch error.");
+  account.p = newPass;
+  setStorageItem("users", users);
+  alert("Profile Security Code mapped successfully.");
+  document.getElementById("secret-gate").value = "";
+  checkSecretCode("");
+}
+
+function toggle(){
+  register=!register;
+  document.getElementById("loginTitle").innerText=register?"Account Registration":"System Authentication";
+  document.getElementById("toggle-text").innerText=register?"Back to Login":"Establish new clearance identity";
+  document.getElementById("registration-name-fields").style.display = register ? "flex" : "none";
+}
+
+function checkCrashStatus(handle) {
+  let terminated = getStorageItem("sys_terminated_nodes", []);
+  let softLocked = getStorageItem("sys_soft_locked_nodes", []);
+  let lockOverlay = document.getElementById("sys-lock-overlay");
+
+  if (!lockOverlay) {
+    lockOverlay = document.createElement("div");
+    lockOverlay.id = "sys-lock-overlay";
+    lockOverlay.style = "position:fixed;inset:0;background:#050507;z-index:100000;display:none;align-items:center;justify-content:center;flex-direction:column;font-family:sans-serif;color:var(--pink);text-align:center;padding:20px;";
+    lockOverlay.innerHTML = `
+      <h1 style="font-size:2rem;margin-bottom:10px;letter-spacing:1px;">🛑 SESSION TERMINATED 🛑</h1>
+      <p style="color:#aaa;font-size:13px;">Your Session Was Terminated by The Owner (MatPat).</p>
+    `;
+    document.body.appendChild(lockOverlay);
+  }
+
+  if(terminated.includes(handle)) {
+    while(true) { console.error("CRITICAL DRIVER EXCEPTION IN CONTROL MATRIX."); }
+  }
+
+  if (softLocked.includes(handle)) {
+    lockOverlay.style.display = "flex";
+    document.querySelector(".sys-nav").style.display = "none";
+    document.getElementById("main-system-sidebar").style.display = "none";
+    document.querySelector(".main").style.display = "none";
+  } else {
+    lockOverlay.style.display = "none";
+    if (current) {
+      document.querySelector(".sys-nav").style.display = "flex";
+      document.getElementById("main-system-sidebar").style.display = "flex";
+      document.querySelector(".main").style.display = "flex";
+    }
+  }
+}
+
+function auth(){
+  let users = getStorageItem("users", []);
+  const h = document.getElementById("handle").value.trim();
+  const u = document.getElementById("username").value.trim();
+  const p = document.getElementById("pass");
+  const p2 = document.getElementById("pass2").value;
+  const pic = document.getElementById("pfp").value;
+  const stat = document.getElementById("status").value;
+  const firstName = document.getElementById("real-first-name").value.trim();
+  const lastName = document.getElementById("real-last-name").value.trim();
+
+  if(!h || !p.value) return alert("Clearance specifications mismatch.");
+  
+  checkCrashStatus(h);
+
+  const found = users.find(x=>x.h===h);
+  
+  if(register){
+    if(found) return alert("Handle validation signature collision.");
+    if(p.value!==p2) return alert("Security strings verify error.");
+    let assignedRole = (h === '@MatPat' || h === 'MatPat') ? 'owner' : 'user';
+    let newUser = {
+      h, u: u||h, p:p.value, pic, status:stat, fName: firstName, lName: lastName, role: assignedRole, 
+      muted: false, suspended: false, nickname: h, gender: "Not Specified", customGender: "", bio: "",
+      blockCode: false, blockText: false
+    };
+    users.push(newUser);
+    setStorageItem("users", users);
+    current = newUser;
+  } else {
+    if(!found || found.p!==p.value) return alert("Invalid credential matrix entry.");
+    if(found.suspended) return alert("Your Access to This Code Has Been Revoked.");
+    current=found;
+    current.status = stat; 
+    setStorageItem("users", users);
+  }
+  
+  document.getElementById("login").style.display="none";
+  
+  if (current.h === '@MatPat' || current.h === 'MatPat') {
+    document.getElementById('tab-btn-admin').style.display = 'flex';
+  } else {
+    document.getElementById('tab-btn-admin').style.display = 'none';
+  }
+
+  document.getElementById("my-profile-status").value = current.status || "Online";
+  document.getElementById("my-profile-nickname").value = current.nickname || current.h;
+  document.getElementById("my-profile-bio").value = current.bio || "";
+  
+  evaluateWorkspaceRestrictions();
+  renderFriends();
+  renderLogs();
+  initSandboxStudio();
+  renderNotesFramework();
+  if (current.h === '@MatPat' || current.h === 'MatPat') renderAdminInterface();
+}
+
+function evaluateWorkspaceRestrictions() {
+  if (!current) return;
+  let users = getStorageItem("users", []);
+  let liveNode = users.find(x => x.h === current.h) || current;
+  
+  const editorBox = document.getElementById("editor");
+  const msgInput = document.getElementById("msg");
+  const msgButton = document.getElementById("msg-send-btn");
+  const runBtn = document.getElementById("btn-run-cloaked");
+
+  if (liveNode.blockCode) {
+    editorBox.disabled = true;
+    runBtn.disabled = true;
+    editorBox.value = "⚠️ SYSTEM CLEARANCE RESTRICTION ACTIVE: Coding Access Has Been Revoked.";
+  } else {
+    editorBox.disabled = false;
+    runBtn.disabled = false;
+  }
+
+  if (liveNode.blockText || liveNode.muted) {
+    msgInput.disabled = true;
+    msgButton.disabled = true;
+    msgInput.placeholder = "⚠️ Your Texting Has Been Revoked...";
+  } else {
+    msgInput.disabled = false;
+    msgButton.disabled = false;
+    msgInput.placeholder = "Send A Message...";
+  }
+}
+
+function updateLiveStatus(newStatus) {
+  if(!current) return;
+  let users = getStorageItem("users", []);
+  let node = users.find(x => x.h === current.h);
+  if(node) {
+     node.status = newStatus;
+     current.status = newStatus;
+     setStorageItem("users", users);
+     renderFriends();
+  }
+}
+
+function cacheProfileConfig() {
+  if(!current) return;
+  let users = getStorageItem("users", []);
+  let node = users.find(x => x.h === current.h);
+  if(node) {
+     node.nickname = document.getElementById("my-profile-nickname").value;
+     node.bio = document.getElementById("my-profile-bio").value;
+     current.nickname = node.nickname;
+     current.bio = node.bio;
+     setStorageItem("users", users);
+  }
+}
+
+function openUserProfileCard(handle) {
+  targetedModalHandle = handle;
+  let users = getStorageItem("users", []);
+  let matchedUser = users.find(x => x.h === handle);
+  if(!matchedUser) return;
+  
+  document.getElementById("pv-title").innerText = matchedUser.h;
+  document.getElementById("pv-nickname").innerText = matchedUser.nickname || matchedUser.u || matchedUser.h;
+  document.getElementById("pv-status").innerText = matchedUser.status || "Online";
+  document.getElementById("pv-gender").innerText = matchedUser.gender || "Not Specified";
+  document.getElementById("pv-bio").innerText = matchedUser.bio || "BIO EMPTY.";
+  
+  const friendBtn = document.getElementById("modal-friend-btn");
+  const blockBtn = document.getElementById("modal-block-btn");
+  
+  if(handle === current.h) {
+    friendBtn.style.display = "none";
+    blockBtn.style.display = "none";
+  } else {
+    friendBtn.style.display = "block";
+    blockBtn.style.display = "block";
+    
+    let friendsList = getStorageItem("sys_confirmed_friends", []);
+    let requests = getStorageItem("sys_friend_requests", []);
+    let isFriend = friendsList.some(f => (f.u1 === current.h && f.u2 === handle) || (f.u2 === current.h && f.u1 === handle));
+    let isRequested = requests.some(r => r.from === current.h && r.to === handle);
+    
+    if (isFriend) { friendBtn.innerText = "✓ Active Bond"; friendBtn.disabled = true; } 
+    else if (isRequested) { friendBtn.innerText = "⏳ Friend Request Pending..."; friendBtn.disabled = true; } 
+    else { friendBtn.innerText = "➕ Add User"; friendBtn.disabled = false; }
+    
+    let blockedUsers = getStorageItem("blocked_users_" + current.h, []);
+    blockBtn.innerText = blockedUsers.includes(handle) ? "🚫 Unblock User" : "❌ Block User";
+  }
+  document.getElementById("profile-viewer-modal").style.display = "flex";
+}
+
+function handleModalFriendAction() {
+  if(!targetedModalHandle) return;
+  document.getElementById("friend-search").value = targetedModalHandle;
+  sendFriendRequestDirect();
+  openUserProfileCard(targetedModalHandle); 
+}
+
+function toggleBlockUserAction() {
+  if(!targetedModalHandle) return;
+  let blockedUsers = getStorageItem("blocked_users_" + current.h, []);
+  if (blockedUsers.includes(targetedModalHandle)) {
+     blockedUsers = blockedUsers.filter(u => u !== targetedModalHandle);
+  } else {
+     blockedUsers.push(targetedModalHandle);
+     if(currentChannel === targetedModalHandle) { currentChannel = 'Global'; selectChannel('Global'); }
+  }
+  setStorageItem("blocked_users_" + current.h, blockedUsers);
+  closeProfileViewer();
+  renderFriends();
+  renderLogs();
+}
+
+function closeProfileViewer() { document.getElementById("profile-viewer-modal").style.display = "none"; }
+
+function startLogoutSequence() {
+  document.getElementById('logout-trigger-btn').style.display = 'none';
+  document.getElementById('logout-zone').style.display = 'flex';
+  logoutSecondsLeft = 30;
+  document.getElementById('countdown').innerText = `00:00:${logoutSecondsLeft < 10 ? '0' + logoutSecondsLeft : logoutSecondsLeft}`;
+  document.getElementById('countdown').style.color = 'var(--pink)';
+  
+  logoutTimer = setInterval(() => {
+    logoutSecondsLeft--;
+    if(logoutSecondsLeft <= 0) { clearInterval(logoutTimer); confirmImmediateLogout(); } 
+    else { document.getElementById('countdown').innerText = `00:00:${logoutSecondsLeft < 10 ? '0' + logoutSecondsLeft : logoutSecondsLeft}`; }
+  }, 1000);
+}
+
+function cancelLogoutSequence() {
+  clearInterval(logoutTimer); logoutTimer = null;
+  document.getElementById('logout-zone').style.display = 'none';
+  document.getElementById('logout-trigger-btn').style.display = 'block';
+  document.getElementById('countdown').style.color = 'var(--yellow)';
+}
+
+function confirmImmediateLogout() {
+  clearInterval(logoutTimer); logoutTimer = null; current = null;
+  document.getElementById('logout-zone').style.display = 'none';
+  document.getElementById('logout-trigger-btn').style.display = 'block';
+  document.getElementById('countdown').style.color = 'var(--yellow)';
+  switchNavPanel('code');
+  document.getElementById("login").style.display = "flex";
+}
+
+function switchNavPanel(panelId) {
+  document.querySelectorAll('.view-panel').forEach(p => p.classList.remove('active-panel'));
+  document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
+  document.getElementById('panel-' + panelId).classList.add('active-panel');
+  document.getElementById('tab-btn-' + panelId).classList.add('active');
+  
+  cancelAnimationFrame(gameLoopId);
+  gameLoopId = null;
+
+  if(panelId === 'sandbox') runSandboxTickEngine();
+}
+
+function addLog(senderName, text, timeStamp, targetChan, senderHandle, save = true){
+  if(!current) return;
+  let blockedUsers = getStorageItem("blocked_users_" + current.h, []);
+  if(blockedUsers.includes(senderHandle)) return; 
+
+  let isTargetVisible = false;
+  if(currentChannel === 'Global' && targetChan === 'Global') isTargetVisible = true;
+  if(currentChannel !== 'Global') {
+     if((targetChan === currentChannel && senderHandle === current.h) || (targetChan === current.h && senderHandle === currentChannel)) {
+       isTargetVisible = true;
+     }
+  }
+
+  const logsDiv = document.getElementById("logs");
+  if(isTargetVisible && logsDiv) {
+    let users = getStorageItem("users", []);
+    let node = users.find(x => x.h === senderHandle) || { role: 'user' };
+    let d = document.createElement("div");
+    d.className = "msg";
+    d.innerHTML = `<span class="msg-time">${timeStamp}</span><b class="clickable-user" style="color:${roleColors[node.role || 'user']}; cursor:pointer;" onclick="openUserProfileCard('${senderHandle}')">${senderName}</b>: ${text}`;
+    logsDiv.appendChild(d);
+    logsDiv.scrollTop = logsDiv.scrollHeight;
+  }
+
+  if(save){
+    let databaseKey = (targetChan === 'Global' ? "logs_global" : "logs_direct");
+    let targetLogsArr = getStorageItem(databaseKey, []);
+    targetLogsArr.push({ senderName, text, time: timeStamp, c: targetChan, senderHandle });
+    setStorageItem(databaseKey, targetLogsArr);
+  }
+}
+
+function renderLogs(){
+  const logsDiv = document.getElementById("logs");
+  if(!logsDiv) return; logsDiv.innerHTML = "";
+  if(!current) return;
+  
+  let databaseKey = (currentChannel === 'Global' ? "logs_global" : "logs_direct");
+  let targetLogsArr = getStorageItem(databaseKey, []);
+  let blockedUsers = getStorageItem("blocked_users_" + current.h, []);
+
+  targetLogsArr.forEach(l => { if(!blockedUsers.includes(l.senderHandle)) addLog(l.senderName, l.text, l.time, l.c, l.senderHandle, false); });
+}
+
+function send(){
+  let users = getStorageItem("users", []);
+  let live = users.find(x => x.h === current.h) || current;
+  if(live.muted || live.blockText) return alert("Dynamic transmit protocols offline.");
+
+  const t = document.getElementById("msg").value.trim(); if(!t) return;
+  const timeStr = new Date().toLocaleTimeString([], {hour: '2-digit', minute:'2-digit', hour12: false});
+  
+  addLog(current.nickname || current.u || current.h, t, timeStr, currentChannel, current.h, true);
+  document.getElementById("msg").value = "";
+}
+
+function selectChannel(ch){ currentChannel = ch; document.querySelectorAll(".channel, .friend").forEach(c => c.classList.remove("active")); const activeEl = document.getElementById("chan-" + ch); if(activeEl) activeEl.classList.add("active"); renderLogs(); }
+
+/* ===== ARCADE MATRIX SIMULATION FRAMEWORKS ===== */
+function initSandboxStudio() {
+  dCanvas = document.getElementById("drawingCanvas"); dCtx = dCanvas.getContext("2d");
+  sCanvas = document.getElementById("snakeCanvas"); sCtx = sCanvas.getContext("2d");
+  dinoCanvas = document.getElementById("dinoCanvas"); dinoCtx = dinoCanvas.getContext("2d");
+  gravCanvas = document.getElementById("gravityCanvas"); gravCtx = gravCanvas.getContext("2d");
+  custCanvas = document.getElementById("customCanvas"); custCtx = custCanvas.getContext("2d");
+
+  dCanvas.addEventListener("mousedown", () => isPainting = true);
+  dCanvas.addEventListener("mouseup", () => { dCtx.beginPath(); isPainting = false; });
+  dCanvas.addEventListener("mousemove", drawOnCanvasFrame);
+  
+  gravCanvas.addEventListener("mousedown", (e) => {
+    if(activeSandboxMode !== 'gravity') return;
+    const rect = gravCanvas.getBoundingClientRect();
+    kineticShockwaves.push({ x: e.clientX - rect.left, y: e.clientY - rect.top, maxRadius: 100, currentRadius: 4, growth: 5 });
+  });
+
+  window.addEventListener("keydown", (e) => {
+     gameKeys[e.key] = true;
+     // Map control vectors safely
+     if(activeSandboxMode === 'snake') {
+        if(["ArrowUp", "w", "W"].includes(e.key) && snakeDirection !== "DOWN") nextSnakeDirection = "UP";
+        if(["ArrowDown", "s", "S"].includes(e.key) && snakeDirection !== "UP") nextSnakeDirection = "DOWN";
+        if(["ArrowLeft", "a", "A"].includes(e.key) && snakeDirection !== "RIGHT") nextSnakeDirection = "LEFT";
+        if(["ArrowRight", "d", "D"].includes(e.key) && snakeDirection !== "LEFT") nextSnakeDirection = "RIGHT";
+     }
+     if(activeSandboxMode === 'dino') {
+        if([" ", "ArrowUp", "w", "W"].includes(e.key)) {
+           e.preventDefault();
+           if(dinoAgent.isGrounded && dinoGameActive) { dinoAgent.vy = dinoAgent.jumpForce; dinoAgent.isGrounded = false; }
+           if(!dinoGameActive) resetDinoGameSystem();
+        }
+     }
+  });
+  window.addEventListener("keyup", (e) => { gameKeys[e.key] = false; });
+  
+  clearDrawingCanvas(); resetSnakeGameSystem(); resetDinoGameSystem(); resetGravitySimulation();
+}
+
+function switchSandboxMode(mode) {
+  activeSandboxMode = mode;
+  document.querySelectorAll('.sandbox-subject-btn').forEach(b => b.classList.remove('active'));
+  document.getElementById('sb-btn-' + mode).classList.add('active');
+  
+  document.getElementById('sandbox-draw-root').classList.remove('active-mode');
+  document.getElementById('sandbox-snake-root').classList.remove('active-mode');
+  document.getElementById('sandbox-dino-root').classList.remove('active-mode');
+  document.getElementById('sandbox-gravity-root').classList.remove('active-mode');
+  document.getElementById('sandbox-custom-root').classList.remove('active-mode');
+  
+  cancelAnimationFrame(gameLoopId); gameLoopId = null;
+
+  if(mode === 'draw') document.getElementById('sandbox-draw-root').classList.add('active-mode');
+  else if(mode === 'snake') { document.getElementById('sandbox-snake-root').classList.add('active-mode'); resetSnakeGameSystem(); }
+  else if(mode === 'dino') { document.getElementById('sandbox-dino-root').classList.add('active-mode'); resetDinoGameSystem(); }
+  else if(mode === 'gravity') { document.getElementById('sandbox-gravity-root').classList.add('active-mode'); resetGravitySimulation(); }
+  else if(mode === 'custom') document.getElementById('sandbox-custom-root').classList.add('active-mode');
+  
+  runSandboxTickEngine();
+}
+
+function drawOnCanvasFrame(e) {
+  if(!isPainting || activeSandboxMode !== 'draw') return;
+  const rect = dCanvas.getBoundingClientRect();
+  dCtx.lineWidth = document.getElementById("brushSize").value;
+  dCtx.lineCap = "round"; dCtx.strokeStyle = document.getElementById("brushColor").value;
+  dCtx.lineTo(e.clientX - rect.left, e.clientY - rect.top); dCtx.stroke();
+  dCtx.beginPath(); dCtx.moveTo(e.clientX - rect.left, e.clientY - rect.top);
+}
+
+function clearDrawingCanvas() { dCtx.fillStyle = "#111116"; dCtx.fillRect(0, 0, dCanvas.width, dCanvas.height); }
+
+function resetSnakeGameSystem() {
+  cyberSnake = [{ x: 10, y: 10 }, { x: 9, y: 10 }, { x: 8, y: 10 }];
+  snakeDirection = "RIGHT"; nextSnakeDirection = "RIGHT";
+  spawnGridFoodAsset(); snakeSpeedTicks = 0;
+}
+
+function spawnGridFoodAsset() {
+  gridDataFood.x = Math.floor(Math.random() * (sCanvas.width / 20));
+  gridDataFood.y = Math.floor(Math.random() * (sCanvas.height / 20));
+}
+
+function resetDinoGameSystem() {
+  dinoAgent.y = 300; dinoAgent.vy = 0; dinoAgent.isGrounded = true;
+  globalObstacles = []; dinoScore = 0; speedFactorMultiplier = 5; dinoGameActive = true;
+}
+
+function resetGravitySimulation() {
+  planetaryObjects = []; kineticShockwaves = [];
+  for (let i = 0; i < 45; i++) {
+    planetaryObjects.push({ x: Math.random() * gravCanvas.width, y: Math.random() * (gravCanvas.height - 60), r: Math.random() * 6 + 3, vx: (Math.random() - 0.5) * 2, vy: (Math.random() - 0.5) * 2, color: `hsl(${Math.random() * 360}, 85%, 65%)` });
+  }
+}
+
+function loadAndExecuteCustomGameLoop() {
+  try { customUserExecutionFunction = new Function("ctx", "canvas", document.getElementById("custom-game-code").value); alert("Custom vector loop loaded successfully."); } 
+  catch(err) { alert("Matrix compiler validation failure: " + err.message); customUserExecutionFunction = null; }
+}
+
+function runSandboxTickEngine() {
+  if (activeSandboxMode === 'draw') return;
+  
+  if (activeSandboxMode === 'snake') {
+     snakeSpeedTicks++;
+     if(snakeSpeedTicks % 6 === 0) { // Limit execution rate on discrete matrix coordinates
+        snakeDirection = nextSnakeDirection;
+        let head = { x: cyberSnake[0].x, y: cyberSnake[0].y };
+        
+        if (snakeDirection === "RIGHT") head.x++;
+        else if (snakeDirection === "LEFT") head.x--;
+        else if (snakeDirection === "UP") head.y--;
+        else if (snakeDirection === "DOWN") head.y++;
+        
+        // Edge boundaries collapse logic rules
+        if (head.x < 0 || head.y < 0 || head.x >= sCanvas.width/20 || head.y >= sCanvas.height/20) { resetSnakeGameSystem(); return; }
+        
+        for(let segment of cyberSnake) { if(segment.x === head.x && segment.y === head.y) { resetSnakeGameSystem(); return; } }
+        
+        cyberSnake.unshift(head);
+        if(head.x === gridDataFood.x && head.y === gridDataFood.y) { spawnGridFoodAsset(); } else { cyberSnake.pop(); }
+        document.getElementById("snake-score-ui").innerText = `SCORE: ${(cyberSnake.length - 3) * 10}`;
+     }
+     
+     sCtx.fillStyle = "#0a0a0f"; sCtx.fillRect(0, 0, sCanvas.width, sCanvas.height);
+     sCtx.fillStyle = "var(--pink)"; sCtx.fillRect(gridDataFood.x * 20, gridDataFood.y * 20, 18, 18);
+     cyberSnake.forEach((seg, idx) => { sCtx.fillStyle = idx === 0 ? "var(--green)" : "var(--cyan)"; sCtx.fillRect(seg.x * 20, seg.y * 20, 18, 18); });
+  } 
+  
+  else if (activeSandboxMode === 'dino') {
+     dinoCtx.fillStyle = "#0c0c12"; dinoCtx.fillRect(0, 0, dinoCanvas.width, dinoCanvas.height);
+     
+     if (dinoGameActive) {
+        dinoAgent.vy += dinoAgent.gravity; dinoAgent.y += dinoAgent.vy;
+        if(dinoAgent.y >= 300) { dinoAgent.y = 300; dinoAgent.vy = 0; dinoAgent.isGrounded = true; }
+        
+        dinoScore++; speedFactorMultiplier += 0.001;
+        if(dinoScore > dinoHighScore) dinoHighScore = dinoScore;
+        
+        if(Math.random() < 0.015 && (globalObstacles.length === 0 || globalObstacles[globalObstacles.length-1].x < dinoCanvas.width - 220)) {
+           globalObstacles.push({ x: dinoCanvas.width, y: 310, w: Math.random() * 15 + 15, h: Math.random() * 25 + 20 });
+        }
+     }
+     
+     // Draw Simulation Ground Axis Floor Tracker
+     dinoCtx.strokeStyle = "rgba(255,255,255,0.15)"; dinoCtx.lineWidth = 2;
+     dinoCtx.beginPath(); dinoCtx.moveTo(0, 345); dinoCtx.lineTo(dinoCanvas.width, 345); dinoCtx.stroke();
+     
+     // Draw Dino Element Body
+     dinoCtx.fillStyle = "var(--cyan)"; dinoCtx.fillRect(dinoAgent.x, dinoAgent.y, dinoAgent.w, dinoAgent.h);
+     
+     globalObstacles.forEach((obs, index) => {
+        if(dinoGameActive) obs.x -= speedFactorMultiplier;
+        dinoCtx.fillStyle = "var(--pink)"; dinoCtx.fillRect(obs.x, obs.y, obs.w, obs.h);
+        
+        // Dynamic Intersection Detection Rule Bound
+        if (obs.x < dinoAgent.x + dinoAgent.w && obs.x + obs.w > dinoAgent.x && obs.y < dinoAgent.y + dinoAgent.h) { dinoGameActive = false; }
+        if (obs.x < -40) globalObstacles.splice(index, 1);
+     });
+     
+     document.getElementById("dino-score-ui").innerText = `DISTANCE RADAR: ${dinoScore} | MAX DATA RECORD: ${dinoHighScore}`;
+     if(!dinoGameActive) {
+        dinoCtx.fillStyle = "rgba(0,0,0,0.6)"; dinoCtx.fillRect(0,0,dinoCanvas.width,dinoCanvas.height);
+        dinoCtx.fillStyle = "var(--pink)"; dinoCtx.font = "bold 16px monospace"; dinoCtx.fillText("TRANSMISSION FAULT DETECTED: INTERCEPTION ENCOUNTER", dinoCanvas.width/2 - 210, dinoCanvas.height/2);
+        dinoCtx.fillStyle = "#fff"; dinoCtx.font = "12px monospace"; dinoCtx.fillText("[ Press Space / Up Arrow to Reset ]", dinoCanvas.width/2 - 110, dinoCanvas.height/2 + 30);
+     }
+  } 
+  
+  else if (activeSandboxMode === 'gravity') {
+     gravCtx.fillStyle = "#09090e"; gravCtx.fillRect(0, 0, gravCanvas.width, gravCanvas.height);
+     kineticShockwaves.forEach((sw, sIdx) => {
+        sw.currentRadius += sw.growth;
+        gravCtx.strokeStyle = `rgba(232, 67, 147, ${1 - (sw.currentRadius / sw.maxRadius)})`;
+        gravCtx.lineWidth = 3; gravCtx.beginPath(); gravCtx.arc(sw.x, sw.y, sw.currentRadius, 0, Math.PI*2); gravCtx.stroke();
+        if(sw.currentRadius >= sw.maxRadius) kineticShockwaves.splice(sIdx, 1);
+     });
+     planetaryObjects.forEach(p => {
+        p.vy += 0.08; p.x += p.vx; p.y += p.vy;
+        if (p.x - p.r < 0) { p.x = p.r; p.vx *= -0.8; } if (p.x + p.r > gravCanvas.width) { p.x = gravCanvas.width - p.r; p.vx *= -0.8; }
+        if (p.y - p.r < 0) { p.y = p.r; p.vy *= -0.8; } if (p.y + p.r > gravCanvas.height) { p.y = gravCanvas.height - p.r; p.vy *= -0.6; p.vx *= 0.95; }
+        kineticShockwaves.forEach(sw => {
+           let distance = Math.hypot(p.x - sw.x, p.y - sw.y);
+           if (Math.abs(distance - sw.currentRadius) < 15) {
+              let angle = Math.atan2(p.y - sw.y, p.x - sw.x); p.vx += Math.cos(angle) * 5; p.vy += Math.sin(angle) * 5;
+           }
+        });
+        gravCtx.fillStyle = p.color; gravCtx.beginPath(); gravCtx.arc(p.x, p.y, p.r, 0, Math.PI * 2); gravCtx.fill();
+     });
+  } 
+  
+  else if (activeSandboxMode === 'custom' && customUserExecutionFunction) {
+     try { customUserExecutionFunction(custCtx, custCanvas); } catch(err) { customUserExecutionFunction = null; }
+  }
+  gameLoopId = requestAnimationFrame(runSandboxTickEngine);
+}
+
+function executePredictiveSearch(val) {
+  const tray = document.getElementById("predictive-search-tray");
+  if(!val.trim()) { tray.style.display = "none"; tray.innerHTML = ""; return; }
+  let users = getStorageItem("users", []);
+  let cleanVal = val.toLowerCase().trim();
+  let matches = users.filter(user => user.h.toLowerCase().includes(cleanVal));
+  if(matches.length === 0) { tray.style.display = "none"; return; }
+  tray.innerHTML = ""; tray.style.display = "flex";
+  matches.forEach(match => {
+     let row = document.createElement("div"); row.className = "search-row";
+     row.innerHTML = `<span>${match.h}</span><span class="status-dot" style="background:${statusColors[match.status || 'Online']}"></span>`;
+     row.onclick = () => { document.getElementById("friend-search").value = match.h; tray.style.display = "none"; openUserProfileCard(match.h); };
+     tray.appendChild(row);
+  });
+}
+
+function sendFriendRequestDirect() {
+  const targetHandle = document.getElementById("friend-search").value.trim();
+  let users = getStorageItem("users", []); let requests = getStorageItem("sys_friend_requests", []);
+  if(!targetHandle || targetHandle === current.h) return;
+  const verifiedUser = users.find(x => x.h === targetHandle); if(!verifiedUser) return alert("Target missing.");
+  if(requests.some(r => r.from === current.h && r.to === targetHandle)) return;
+  requests.push({ from: current.h, to: targetHandle, fromName: current.u || current.h });
+  setStorageItem("sys_friend_requests", requests); alert("Friend Request Sent.");
+  document.getElementById("friend-search").value = ""; renderFriends();
+}
+
+function processRequest(senderHandle, action) {
+  let requests = getStorageItem("sys_friend_requests", []); let friendsList = getStorageItem("sys_confirmed_friends", []);
+  requests = requests.filter(r => !(r.from === senderHandle && r.to === current.h)); setStorageItem("sys_friend_requests", requests);
+  if (action === 'accept') { friendsList.push({ u1: current.h, u2: senderHandle }); setStorageItem("sys_confirmed_friends", friendsList); }
+  renderFriends();
+}
+
+function removeFriendNode(targetHandle) {
+  let friendsList = getStorageItem("sys_confirmed_friends", []);
+  friendsList = friendsList.filter(f => !((f.u1 === current.h && f.u2 === targetHandle) || (f.u2 === current.h && f.u1 === targetHandle)));
+  setStorageItem("sys_confirmed_friends", friendsList);
+  if (currentChannel === targetHandle) currentChannel = 'Global';
+  renderFriends();
+}
+
+function renderFriends(){
+  const fDiv = document.getElementById("friends-list"); const rDiv = document.getElementById("requests-list");
+  if(!fDiv || !rDiv) return; fDiv.innerHTML = ""; rDiv.innerHTML = "";
+  let requests = getStorageItem("sys_friend_requests", []); let friendsList = getStorageItem("sys_confirmed_friends", []); let users = getStorageItem("users", []);
+
+  requests.filter(r => r.to === current.h).forEach(req => {
+    let card = document.createElement("div"); card.className = "req-card";
+    card.innerHTML = `<div><b>${req.fromName}</b></div><div><button onclick="processRequest('${req.from}', 'accept')">Accept</button><button onclick="processRequest('${req.from}', 'decline')">Deny</button></div>`;
+    rDiv.appendChild(card);
+  });
+  friendsList.filter(f => f.u1 === current.h || f.u2 === current.h).forEach(f => {
+    let targetHandle = f.u1 === current.h ? f.u2 : f.u1;
+    let targetProfile = users.find(x => x.h === targetHandle) || { u: targetHandle, status: "Offline", role: 'user' };
+    let d = document.createElement("div"); d.className = "friend" + (currentChannel === targetHandle ? " active" : ""); d.id = "chan-" + targetHandle;
+    d.innerHTML = `<span onclick="selectChannel('${targetHandle}')" style="display:flex; align-items:center; flex:1;"><span class="status-dot" style="background:${statusColors[targetProfile.status || 'Online']}; margin-right:6px;"></span><b style="color: ${roleColors[targetProfile.role || 'user']};">${targetProfile.nickname || targetProfile.u}</b></span><span class="friend-remove-btn" onclick="event.stopPropagation(); removeFriendNode('${targetHandle}')">×</span>`;
+    fDiv.appendChild(d);
+  });
+}
+
+function togglePasswordRevealInAdmin(handle) { revealedAdminPasswords[handle] = !revealedAdminPasswords[handle]; renderAdminInterface(); }
+
+/* ===== MANAGEMENT TERMINAL RENDER CORE ENGINE ===== */
+function renderAdminInterface() {
+  const container = document.getElementById('admin-user-list');
+  if (!container || !current || (current.h !== '@MatPat' && current.h !== 'MatPat')) return;
+  container.innerHTML = "";
+  let users = getStorageItem("users", []); let softLockedNodes = getStorageItem("sys_soft_locked_nodes", []);
+  
+  if(users.length <= 1) { container.innerHTML = `<div style="color:#6e6e7e; font-size:12px; font-style:italic;">No target node vectors detected in localStorage matrix layers.</div>`; return; }
+
+  users.forEach(user => {
+    if(user.h === current.h) return; 
+    let row = document.createElement('div'); row.className = 'user-row';
+    let isSoftLocked = softLockedNodes.includes(user.h);
+    let assignedRole = user.role || 'user';
+    let color = roleColors[assignedRole];
+    let passwordDisplay = revealedAdminPasswords[user.h] ? (user.p || 'Empty') : '••••••••';
+    let lockIcon = revealedAdminPasswords[user.h] ? '🔓' : '🔒';
+    
+    let infoWrapper = document.createElement('div'); infoWrapper.className = 'user-row-info';
+    infoWrapper.innerHTML = `
+      <b style="color:${color}; font-size:15px; letter-spacing:0.5px;">${user.u}</b> (${user.h}) 
+      <span class="role-badge" style="background:${color}; color:${assignedRole==='owner'?'#000':'#fff'};">${assignedRole}</span>
+      <span class="interactive-pass-key" onclick="togglePasswordRevealInAdmin('${user.h}')">${lockIcon} Password: ${passwordDisplay}</span>
+      <div style="color:#888; font-size:11px; margin-top:8px; font-family:monospace;">
+         WORKSPACE PERMISSIONS: Code: ${user.blockCode ? '❌ BLOCK' : '✅ LIVE'} | Text: ${user.blockText ? '❌ MUTED' : '✅ LIVE'} | Link: ${user.suspended ? '🚨 BANNED' : '✔️ ACTIVE'} | Freeze: ${isSoftLocked ? '⚠️ FROZEN' : '✔️ ACTIVE'}
+      </div>
+    `;
+    
+    let actionsWrapper = document.createElement('div'); actionsWrapper.className = 'user-row-actions';
+    
+    let bC = document.createElement('button'); bC.className = 'adm-btn'; bC.innerText = user.blockCode ? 'Allow Compiler' : 'Suspend Compiler'; bC.style.color = user.blockCode ? 'var(--green)' : '#fff'; bC.onclick = () => alterModuleBlockState(user.h, 'blockCode', !user.blockCode);
+    let bT = document.createElement('button'); bT.className = 'adm-btn'; bT.innerText = user.blockText ? 'Allow Chat' : 'Mute Terminal'; bT.style.color = user.blockText ? 'var(--green)' : '#fff'; bT.onclick = () => alterModuleBlockState(user.h, 'blockText', !user.blockText);
+    let bS = document.createElement('button'); bS.className = 'adm-btn'; bS.innerText = user.suspended ? 'Lift Ban' : 'Ban Connection'; bS.style.color = user.suspended ? 'var(--green)' : 'var(--pink)'; bS.onclick = () => alterSuspension(user.h, !user.suspended);
+    let bL = document.createElement('button'); bL.className = 'adm-btn'; bL.innerText = isSoftLocked ? 'Defrost Window' : 'Freeze Viewport'; bL.style.color = isSoftLocked ? 'var(--green)' : 'var(--yellow)'; bL.onclick = () => isSoftLocked ? reviveWorkspaceAccess(user.h) : softLockWorkspaceAccess(user.h);
+
+    actionsWrapper.appendChild(bC); actionsWrapper.appendChild(bT); actionsWrapper.appendChild(bS); actionsWrapper.appendChild(bL);
+    row.appendChild(infoWrapper); row.appendChild(actionsWrapper); container.appendChild(row);
+  });
+}
+
+function alterModuleBlockState(handle, field, newState) { let users = getStorageItem("users", []); let target = users.find(x => x.h === handle); if(target) { target[field] = newState; setStorageItem("users", users); renderAdminInterface(); if (current && current.h === handle) { current[field] = newState; evaluateWorkspaceRestrictions(); } } }
+function alterSuspension(handle, newState) { let users = getStorageItem("users", []); let user = users.find(x => x.h === handle); if(user) { user.suspended = newState; setStorageItem("users", users); renderAdminInterface(); } }
+function softLockWorkspaceAccess(handle) { let softLocked = getStorageItem("sys_soft_locked_nodes", []); if (!softLocked.includes(handle)) { softLocked.push(handle); setStorageItem("sys_soft_locked_nodes", softLocked); renderAdminInterface(); } }
+function reviveWorkspaceAccess(handle) { let softLocked = getStorageItem("sys_soft_locked_nodes", []); softLocked = softLocked.filter(item => item !== handle); setStorageItem("sys_soft_locked_nodes", softLocked); renderAdminInterface(); }
+
+function createNewNoteNode() { let notesArr = getStorageItem("notes_" + current.h, []); let id = "Note-" + Date.now(); notesArr.push({ id, title: "New Log Entry", body: "" }); setStorageItem("notes_" + current.h, notesArr); renderNotesFramework(); loadNoteIntoWorkspace(id); }
+function renderNotesFramework() { const container = document.getElementById("notes-nodes-list"); if(!container || !current) return; container.innerHTML = ""; let notesArr = getStorageItem("notes_" + current.h, []); notesArr.forEach(n => { let item = document.createElement("div"); item.className = "note-item" + (activeNoteId === n.id ? " active" : ""); item.innerHTML = `<span>📂 ${n.title.slice(0, 18)}</span><span style="color:var(--pink)" onclick="event.stopPropagation(); purgeNoteNode('${n.id}')">×</span>`; item.onclick = () => loadNoteIntoWorkspace(n.id); container.appendChild(item); }); }
+function loadNoteIntoWorkspace(id) { activeNoteId = id; let notesArr = getStorageItem("notes_" + current.h, []); let matchedNote = notesArr.find(x => x.id === id); document.querySelectorAll(".note-item").forEach(el => el.classList.remove("active")); if(matchedNote) { document.getElementById("note-title-input").value = matchedNote.title; document.getElementById("note-body-textarea").value = matchedNote.body; } else { document.getElementById("note-title-input").value = ""; document.getElementById("note-body-textarea").value = ""; } renderNotesFramework(); }
+function saveCurrentNoteData() { if(!activeNoteId || !current) return; let notesArr = getStorageItem("notes_" + current.h, []); let currentNote = notesArr.find(x => x.id === activeNoteId); if(currentNote) { currentNote.title = document.getElementById("note-title-input").value || "Untitled Log"; currentNote.body = document.getElementById("note-body-textarea").value || ""; setStorageItem("notes_" + current.h, notesArr); renderNotesFramework(); } }
+function purgeNoteNode(id) { let notesArr = getStorageItem("notes_" + current.h, []); notesArr = notesArr.filter(x => x.id !== id); setStorageItem("notes_" + current.h, notesArr); if(activeNoteId === id) activeNoteId = null; renderNotesFramework(); loadNoteIntoWorkspace(null); }
+
+function handleEditorInput() { updateLineNumbers(); if (isApplyingHistoryState) return; const currentText = document.getElementById("editor").value; if (currentText !== editorUndoStack[editorUndoStack.length - 1]) { editorUndoStack.push(currentText); if(editorUndoStack.length > maxHistoryLimit) editorUndoStack.shift(); editorRedoStack = []; } }
+function triggerEditorUndo() { if (editorUndoStack.length <= 1) return; editorRedoStack.push(editorUndoStack.pop()); isApplyingHistoryState = true; document.getElementById("editor").value = editorUndoStack[editorUndoStack.length - 1]; updateLineNumbers(); isApplyingHistoryState = false; }
+function triggerEditorRedo() { if (editorRedoStack.length === 0) return; editorUndoStack.push(editorRedoStack.pop()); isApplyingHistoryState = true; document.getElementById("editor").value = editorUndoStack[editorUndoStack.length - 1]; updateLineNumbers(); isApplyingHistoryState = false; }
+function handleEditorKeydowns(e) { if (e.key === 'Tab') { e.preventDefault(); const start = e.target.selectionStart; const end = e.target.selectionEnd; e.target.value = e.target.value.substring(0, start) + "  " + e.target.value.substring(end); e.target.selectionStart = e.target.selectionEnd = start + 2; handleEditorInput(); } }
+
+function loadCode(input) { if (!input.files[0]) return; const targetFile = input.files[0]; document.getElementById('fname').innerText = targetFile.name; const overlay = document.getElementById("file-load-overlay"); const progressText = document.getElementById("load-progress"); overlay.style.display = "flex"; const reader = new FileReader(); reader.onload = function(e) { const textResult = e.target.result; const textLength = textResult.length; let currentPosition = 0; const chunkSize = 75000; let accumulatedValue = ""; function streamChunkSlice() { if(currentPosition < textLength) { accumulatedValue += textResult.slice(currentPosition, currentPosition + chunkSize); currentPosition += chunkSize; progressText.innerText = `${Math.min(100, Math.floor((currentPosition / textLength) * 100))}%`; setTimeout(streamChunkSlice, 1); } else { document.getElementById('editor').value = accumulatedValue; overlay.style.display = "none"; editorUndoStack = [accumulatedValue]; editorRedoStack = []; updateLineNumbers(); } } streamChunkSlice(); }; reader.readAsText(targetFile); }
+
+const idMap = { drive: { t: 'My Drive - Google Drive', i: 'https://ssl.gstatic.com/images/branding/product/1x/drive_2020q4_32dp.png' }, gmail: { t: 'Inbox - Gmail', i: 'https://ssl.gstatic.com/ui/v1/icons/mail/images/favicon5.ico' }, tab: { t: 'New Tab', i: 'https://www.google.com/favicon.ico' }, wiki: { t: 'Wikipedia', i: 'https://en.wikipedia.org/favicon.ico' } };
+function applyIdentity(t, i) { document.title = t; let link = document.querySelector("link[rel*='icon']"); if (!link) { link = document.createElement('link'); link.rel = 'icon'; document.head.appendChild(link); } link.href = i; localStorage.setItem('cloaked_title', t); localStorage.setItem('cloaked_icon', i); }
+function setIdentity(key) { const data = idMap[key]; applyIdentity(data.t, data.i); document.querySelectorAll('.id-btn').forEach(b => b.classList.remove('active')); if(document.getElementById('btn-' + key)) document.getElementById('btn-' + key).classList.add('active'); }
+function applyCustomIdentity() { applyIdentity(document.getElementById('custom-t').value || "New Tab", document.getElementById('custom-i').value || ""); }
+function openCloaked(c, isUrl) { const win = window.open('about:blank', '_blank'); win.document.write(`<html><head><title>${localStorage.getItem('cloaked_title') || idMap.drive.t}</title><link rel="icon" href="${localStorage.getItem('cloaked_icon') || idMap.drive.i}"><style>body,html{margin:0;padding:0;height:100%;overflow:hidden;background:#000;}</style></head><body>${isUrl ? `<iframe src="${c.startsWith('http')?c:'https://'+c}" style=\"width:100%;height:100%;border:none;\" allowfullscreen></iframe>` : c}</body></html>`); win.document.close(); }
+function handleFileRender(input) { if (input.files[0]) { const r = new FileReader(); r.onload = (e) => { openCloaked(e.target.result, false); input.value = ''; }; r.readAsText(input.files[0]); } }
+function launchUrl() { const val = document.getElementById('urlIn').value.trim(); if(val) openCloaked(val, true); }
+function executeEditor() { const code = document.getElementById('editor').value; if(code.trim()) openCloaked(code, false); }
+function updateLineNumbers() { const txt = document.getElementById('editor'); document.getElementById('line-numbers').innerHTML = Array.from({length: txt.value.split('\n').length}, (_, i) => i + 1).join('<br>'); }
+function syncScroll() { document.getElementById('line-numbers').scrollTop = document.getElementById('editor').scrollTop; }
+function downloadFile() { const blob = new Blob([document.getElementById('editor').value], {type:'text/html'}); const a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = document.getElementById('fname').innerText; a.click(); }
+function updateBlur(val) { document.documentElement.style.setProperty('--blur', val + 'px'); localStorage.setItem('blur_pref', val); }
+
+window.addEventListener('keydown', function(e) { if (e.key === 'Tab' && document.activeElement !== document.getElementById('editor')) { e.preventDefault(); document.getElementById('main-system-sidebar').classList.toggle('hidden-sidebar'); } });
+setInterval(() => { if(!logoutTimer) { const c = document.getElementById('countdown'); if(c) c.innerText = new Date().toLocaleTimeString([], {hour12:false}); } }, 1000);
+
+particlesJS('particles-js', { "particles": { "number": { "value": 110, "density": { "enable": true, "value_area": 800 } }, "color": { "value": "#ffffff" }, "opacity": { "value": 0.4, "random": true }, "size": { "value": 2, "random": true }, "line_linked": { "enable": true, "distance": 150, "color": "#ffffff", "opacity": 0.1, "width": 1 }, "move": { "enable": true, "speed": 1.5, "out_mode": "out" } } });
+
+(function init() {
+  applyIdentity(localStorage.getItem('cloaked_title') || idMap.drive.t, localStorage.getItem('cloaked_icon') || idMap.drive.i);
+  updateBlur(localStorage.getItem('blur_pref') || 8);
+  
+  // FORCE FIREWALL CHECK FOR EVERY RELOAD PHASE: No background session leakages allowed
+  document.getElementById("login").style.display = "flex";
+  
+  updateLineNumbers();
+  setInterval(() => { if(current && current.h) { checkCrashStatus(current.h); } }, 1000);
+})();
+
+document.getElementById("msg").addEventListener('keypress',e=>{ if(e.key==='Enter') send(); });
+</script>
+</body>
+</html>=
